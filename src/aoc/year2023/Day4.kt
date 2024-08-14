@@ -4,7 +4,7 @@ import aoc.Day
 
 class Day4 : Day {
   override fun part1(input: String) {
-    splitInput(input)
+    println(input)
     println("Part 1")
   }
 
