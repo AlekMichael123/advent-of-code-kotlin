@@ -29,4 +29,4 @@ bin/
 .DS_Store
 
 ### input ###
-/src/input.txt
+src/input.txt
