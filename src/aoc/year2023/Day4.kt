@@ -4,10 +4,10 @@ import aoc.Day
 
 class Day4 : Day {
   override fun part1(input: String) {
-    TODO("Not yet implemented")
+    println("Part 1")
   }
 
   override fun part2(input: String) {
-    TODO("Not yet implemented")
+    println("Part 2")
   }
 }
