@@ -3,9 +3,9 @@ package aoc.year2023
 import aoc.Day
 
 class Day5 : Day {
-  operator fun <T> List<T>.component6(): T = get(5)
-  operator fun <T> List<T>.component7(): T = get(6)
-  operator fun <T> List<T>.component8(): T = get(7)
+  private operator fun <T> List<T>.component6(): T = get(5)
+  private operator fun <T> List<T>.component7(): T = get(6)
+  private operator fun <T> List<T>.component8(): T = get(7)
 
   /**
    * INPUT RANT: WTF decided to have the ranges start with destination then source???
