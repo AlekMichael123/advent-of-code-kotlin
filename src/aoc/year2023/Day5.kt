@@ -42,7 +42,7 @@ class Day5 : Day {
     val temperatureToHumidityMap = createMapBasedOffRanges(flattenMap(lightToTemperatureMap), temperatureToHumidityRanges)
     val humidityToLocationMap = createMapBasedOffRanges(flattenMap(temperatureToHumidityMap), humidityToLocationRanges)
 
-    val closestUsableLocation = humidityToLocationMap.values.toList().flatten().minOrNull()
+    val closestUsableLocation = flattenMap(humidityToLocationMap).minOrNull()
 
     println("The closest usable location is $closestUsableLocation")
   }
@@ -52,22 +52,21 @@ class Day5 : Day {
   }
 
   private fun createMapBasedOffRanges(initialValues: List<Long>, ranges: List<Pair<LongRange, LongRange>>) =
-    initialValues.fold(mutableMapOf<Long, MutableList<Long>>()) { map, value ->
-      map[value] = mutableListOf()
-
+    initialValues.associateWith { value ->
+      val list =  mutableListOf<Long>()
       ranges.forEach { (destinationRange, sourceRange) ->
         if (value in sourceRange) {
           // LOL first I was using indexOf which was slow, but then I wised up
           val index = value - sourceRange.first
-          map[value]?.add(destinationRange.first + index)
+          list.add(destinationRange.first + index)
         }
       }
 
-      if (map[value]?.isEmpty() == true) {
-        map[value]?.add(value) // if not mapped, map with same value
+      if (list.isEmpty()) {
+        list.add(value) // if not mapped, map with same value
       }
 
-      map
+      list
     }
 
   private fun rangesStringToRanges(rangesString: List<List<Long>>) =
@@ -91,6 +90,6 @@ class Day5 : Day {
       .map(String::trim)
       .map { line -> line.split("\n").map { it.split(" ").map(String::toLong) } }
 
-  private fun flattenMap(map: MutableMap<Long, MutableList<Long>>) =
+  private fun flattenMap(map: Map<Long, MutableList<Long>>) =
     map.values.toList().flatten()
 }
