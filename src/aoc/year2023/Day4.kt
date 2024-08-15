@@ -44,8 +44,8 @@ class Day4 : Day {
     input.lines().map { line ->
       val (_, winningNumbers, myNumbers) = line.split(":", "|")
 
-      winningNumbers.trim().split(" ").filter { it.isNotEmpty() } to
-      myNumbers.trim().split(" ").filter { it.isNotEmpty() }
+      winningNumbers.trim().split(" ").filter(String::isNotEmpty) to
+      myNumbers.trim().split(" ").filter(String::isNotEmpty)
     }
 
 }
