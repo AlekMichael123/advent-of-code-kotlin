@@ -7,5 +7,6 @@ class Year2023Solutions : YearSolutions() {
     mapOf(
       4 to Day4(),
       5 to Day5(),
+      6 to Day6(),
     )
 }
