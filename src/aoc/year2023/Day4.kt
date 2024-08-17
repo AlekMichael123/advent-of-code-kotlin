@@ -4,13 +4,11 @@ import aoc.Day
 
 class Day4 : Day {
   override fun part1(input: String) {
-    println("Part 1")
     val result = playGame(splitInput(input))
     println("Total score: $result")
   }
 
   override fun part2(input: String) {
-    println("Part 2")
     val cards = splitInput(input)
     val totalCards = countCards(cards)
     println("Total cards: $totalCards")

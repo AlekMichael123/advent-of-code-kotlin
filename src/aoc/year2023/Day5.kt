@@ -16,7 +16,6 @@ class Day5 : Day {
    */
 
   override fun part1(input: String) {
-    println("Part 1")
     val (
       initialSeeds,
       seedToSoil,
@@ -50,7 +49,6 @@ class Day5 : Day {
   }
 
   override fun part2(input: String) {
-    println("Part 2")
     val (
       initialSeeds,
       seedToSoil,

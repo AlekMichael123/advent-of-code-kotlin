@@ -7,7 +7,9 @@ fun main(args: Array<String>) {
   val yearSolutions = getYearSolution(year.toInt())
   val solution = yearSolutions?.getSolution(day.toInt())
   solution?.let {
+    println("Part 1")
     it.part1(input)
+    println("Part 2")
     it.part2(input)
   }
 }
