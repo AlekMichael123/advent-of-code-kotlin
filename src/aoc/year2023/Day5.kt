@@ -2,6 +2,9 @@ package aoc.year2023
 
 import aoc.Day
 
+/**
+ * I can probably clean this up nicer but ehhhhh! This day sucks anyway! It doesn't deserve it
+ */
 class Day5 : Day {
   private operator fun <T> List<T>.component6(): T = get(5)
   private operator fun <T> List<T>.component7(): T = get(6)
@@ -80,16 +83,10 @@ class Day5 : Day {
     println("Closest available location is: " + (closestAvailableIsland ?: "None Available"))
   }
 
-  private fun createMapBasedOffRangesFromRanges(initialRanges:  List<Pair<Long, Long>>, ranges: List<Pair<Pair<Long, Long>, Pair<Long, Long>>>) =
+  private fun createMapBasedOffRangesFromRanges(initialRanges:  List<LongRange>, ranges: List<Pair<LongRange, LongRange>>) =
     initialRanges.associateWith { initialRange ->
-      val list = mutableListOf<Pair<Long, Long>>()
+      val mappedValues = mutableListOf<LongRange>() // list of mapped values
       ranges.forEach { (destinationRange, sourceRange) ->
-        if (
-          !(initialRange.first <= sourceRange.second && sourceRange.first <= initialRange.second)
-        ) {
-          return@forEach
-        }
-
         /**
          * AN: WHY DOES PART 1 CONSIDER UNMAPPED VALUES BUT NOT PART 2??? I MUST BE STUPID BUT I THINK THIS PROBLEM
          * WAS VERY POORLY WORDED!!!! Wasted two days on this because I was considering cases such as:
@@ -98,27 +95,28 @@ class Day5 : Day {
          * [1,2,3]       -- mapped values
          * but NOPE we just don't want these values at all. WTF?
          */
+        // find overlapped extremes
         val overlapFirst = sourceRange.first.coerceAtLeast(initialRange.first)
-        val overlapLast = sourceRange.second.coerceAtMost(initialRange.second)
+        val overlapLast = sourceRange.last.coerceAtMost(initialRange.last)
+        // if this range exists, add mapped values
         if (overlapFirst < overlapLast) {
           val offset = destinationRange.first - sourceRange.first
-          list.add(overlapFirst+offset to overlapLast+offset)
+          mappedValues.add(overlapFirst+offset .. overlapLast+offset)
         }
-
-
       }
-      // add unmapped values from initialRange
-      if (list.isEmpty()) {
-        list.add(initialRange)
+
+      // add unmapped values if nothing corresponds
+      if (mappedValues.isEmpty()) {
+        mappedValues.add(initialRange)
       }
-      list
+      mappedValues
     }
 
-  private fun createMapBasedOffRanges(initialValues: List<Long>, ranges: List<Pair<Pair<Long, Long>, Pair<Long, Long>>>) =
+  private fun createMapBasedOffRanges(initialValues: List<Long>, ranges: List<Pair<LongRange, LongRange>>) =
     initialValues.associateWith { value ->
       val list =  mutableListOf<Long>()
       ranges.forEach { (destinationRange, sourceRange) ->
-        if (value in (sourceRange.first .. sourceRange.second)) {
+        if (value in sourceRange) {
           // LOL first I was using indexOf which was slow, but then I wised up
           val index = value - sourceRange.first
           list.add(destinationRange.first + index)
@@ -135,13 +133,13 @@ class Day5 : Day {
     seedRanges
       .mapIndexed { i, seedInitial ->
         if (i % 2 != 0) null
-        else seedInitial to seedInitial + seedRanges[i + 1]
+        else seedInitial .. seedInitial + seedRanges[i + 1]
       }
       .filterNotNull()
 
   private fun rangesStringToRanges(rangesString: List<List<Long>>) =
     rangesString.map { (aStart, bStart, rangeLength) ->
-      (aStart to aStart + rangeLength - 1) to (bStart to bStart + rangeLength - 1)
+      (aStart ..< aStart + rangeLength) to (bStart ..< bStart + rangeLength)
     }
 
   private fun parseInput(input: String) =
@@ -163,6 +161,6 @@ class Day5 : Day {
   private fun flattenMap(map: Map<Long, MutableList<Long>>) =
     map.values.toList().flatten()
 
-  private fun flattenRangesMap(map:  Map<Pair<Long, Long>, MutableList<Pair<Long, Long>>>) =
+  private fun flattenRangesMap(map:  Map<LongRange, MutableList<LongRange>>) =
     map.values.toList().flatten()
 }
