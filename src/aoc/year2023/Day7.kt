@@ -58,10 +58,6 @@ class Day7 : Day {
   override fun part2(input: String) {
     val data = parseInput(input)
     val order = data.map { pair ->
-      if (pair.first.contains('J')) {
-        println("Current hand: " + pair.first)
-        println("Hand Order: " + handOrder(pair.first, jokers = true))
-      }
       handOrder(pair.first, jokers = true).value to pair
     }.fold(mutableMapOf<Int, MutableList<Pair<String, Int>>>()) { map, pair ->
       map.putIfAbsent(pair.first, mutableListOf())
@@ -114,6 +110,7 @@ class Day7 : Day {
       val threeOfaKindCheck = threeOfaKind(handArr, jokers)
       val twoPairCheck = twoPair(handArr, jokers)
       val onePairCheck = onePair(handArr, jokers)
+      val highCardCheck = highCard(handArr, jokers)
 
       if (pass(fiveOfaKindCheck)) fiveOfaKindCheck
       else if (pass(fourOfaKindCheck)) fourOfaKindCheck
@@ -121,9 +118,12 @@ class Day7 : Day {
       else if (pass(threeOfaKindCheck)) threeOfaKindCheck
       else if (pass(twoPairCheck)) twoPairCheck
       else if (pass(onePairCheck)) onePairCheck
-      else if (jokers) HandOrder.ONE_PAIR
-      else HandOrder.HIGH_CARD
+      else highCardCheck
     }
+
+  private fun highCard(hand: CharArray, jokers: Boolean) =
+    if (jokers && hand.contains('J')) HandOrder.ONE_PAIR
+    else HandOrder.HIGH_CARD
 
   private fun onePair(hand: CharArray, jokers: Boolean = false) =
     if (
@@ -149,9 +149,7 @@ class Day7 : Day {
       hand.count { it == hand[1] } == 3 ||
       hand.count { it == hand[2] } == 3
     )
-//      if (jokers)
       if (jokers && (hand.count { it == 'J' } == 3 || hand.count { it == 'J' } == 1)) HandOrder.FOUR_OF_A_KIND
-//        else if (hand.count { it == 'J' } == 1)
       else HandOrder.THREE_OF_A_KIND
     else HandOrder.BUST
 
@@ -166,7 +164,7 @@ class Day7 : Day {
       hand.count { it == hand[0] } == 4 ||
       hand.count { it == hand[1] } == 4
     )
-      if (jokers && hand.count { it == 'J' } == 1) HandOrder.FIVE_OF_A_KIND
+      if (jokers && (hand.count { it == 'J' } == 1 || hand.count { it == 'J' } == 4)) HandOrder.FIVE_OF_A_KIND
       else HandOrder.FOUR_OF_A_KIND
     else HandOrder.BUST
 
