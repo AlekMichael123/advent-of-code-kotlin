@@ -19,7 +19,7 @@ class Day8 : Day {
    * works in a case like this.
    *
    * Basically, you need to realize that the ghosts fall into loops of equal length then have the intuition that the LCM of
-   * all of the amount of steps to repeat repeat will grant you the solution.
+   * all the amount of steps to repeat will grant you the solution.
    *
    * From Reddit:
    *  "when a ghost loops every X steps, then it will be at a finish point after Y steps if and only if Y is a multiple of X."
