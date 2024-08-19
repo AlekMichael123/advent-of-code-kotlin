@@ -33,6 +33,9 @@ class Day8 : Day {
    *
    * I don't really get this solution but maybe if I draw it out it'll make more sense. I hate that the example inputs
    * AoC gives don't expose what the input is doing, and you're just supposed to waste time deciphering the ghosts to figure it out.
+   *
+   * EDIT: Shout out to Todd Ginsberg for a great explanation of this problem and exposing tailrec to me:
+   * https://todd.ginsberg.com/post/advent-of-code/2023/day8/
    */
 
   override fun part2(input: String) {
@@ -41,39 +44,45 @@ class Day8 : Day {
     val steps =
       startingLocations
         .map { followInstructions(instructions, nodeMap, it) }
-        .fold(1L) { acc, steps -> lcm(acc, steps.toLong()) }
+        .fold(1L) { acc, steps -> acc.lcm(steps.toLong()) }
 
     println("Total steps taken: $steps")
   }
 
-  private fun followInstructions(
+  private tailrec fun followInstructions(
     instructions: String,
     nodeMap: Map<String, Pair<String, String>>,
-    startLocation: String = "AAA",
-  ): Int {
-    var currLocation = startLocation
-    var i = 0
-    var steps = 0
-    while (currLocation[0] != 'Z') {
-      currLocation = if (instructions[i] == 'L')
-        nodeMap[currLocation]!!.first
-      else
-        nodeMap[currLocation]!!.second
+    currLocation: String = "AAA",
+    i: Int = 0,
+    steps: Int = 0,
+  ): Int =
+    if (currLocation[0] == 'Z')
+      steps
+    else if (instructions[i] == 'L')
+      followInstructions(
+        instructions,
+        nodeMap,
+        currLocation = nodeMap[currLocation]!!.first,
+        i = (i + 1) % instructions.length,
+        steps = steps + 1,
+      )
+    else
+      followInstructions(
+        instructions,
+        nodeMap,
+        currLocation = nodeMap[currLocation]!!.second,
+        i = (i + 1) % instructions.length,
+        steps = steps + 1,
+      )
 
-      steps++
-      i = (i + 1) % instructions.length
-    }
-    return steps
-  }
 
-  private fun gcd(a: Long, b: Long): Long {
-    val remainder = a % b
-    return if (remainder == 0L) b else gcd(b, remainder)
-  }
+  private tailrec fun Long.gcd(a: Long): Long =
+    if (a == 0L) this
+    else a.gcd(this % a)
 
-  private fun lcm(a: Long, b: Long): Long {
-    return a * b / gcd(a, b)
-  }
+  private fun Long.lcm(a: Long) =
+    this * a / this.gcd(a)
+
 
   private fun parseInput(input: String, reversed: Boolean = false): Pair<String, Map<String, Pair<String, String>>> {
     val lines = input.lines().filter(String::isNotEmpty)
