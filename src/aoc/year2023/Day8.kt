@@ -32,7 +32,7 @@ class Day8 : Day {
    *  The first time these two ghosts are at the finish point at the same time is exactly at the least common multiple of 3 and 5, namely 15"
    *
    * I don't really get this solution but maybe if I draw it out it'll make more sense. I hate that the example inputs
-   * AoC gives don't expose what the input is doing and you're just supposed to waste time deciphering the ghosts to figure it out.
+   * AoC gives don't expose what the input is doing, and you're just supposed to waste time deciphering the ghosts to figure it out.
    */
 
   override fun part2(input: String) {
@@ -55,10 +55,10 @@ class Day8 : Day {
     var i = 0
     var steps = 0
     while (currLocation[0] != 'Z') {
-      if (instructions[i] == 'L')
-        currLocation = nodeMap[currLocation]!!.first
+      currLocation = if (instructions[i] == 'L')
+        nodeMap[currLocation]!!.first
       else
-        currLocation = nodeMap[currLocation]!!.second
+        nodeMap[currLocation]!!.second
 
       steps++
       i = (i + 1) % instructions.length
