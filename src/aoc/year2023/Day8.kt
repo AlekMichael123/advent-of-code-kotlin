@@ -22,7 +22,14 @@ class Day8 : Day {
    * all the amount of steps to repeat will grant you the solution.
    *
    * From Reddit:
-   *  "when a ghost loops every X steps, then it will be at a finish point after Y steps if and only if Y is a multiple of X."
+   *  "when a ghost loops every X steps, then it will be at a finish point after Y steps if and only if Y is a multiple of X.
+   *
+   *  n theory, it would be possible that a ghost loops every 3 steps, but visits the finish point at steps 2, 5, 8, 11, ...
+   *  It would also be possible that a ghost loops every 5 steps and is at a finish point at steps 3, 5, 8, 10, 13, 15, ...
+   *
+   *  But no, it just happens that the 3 ghost is at the finish at steps 3, 6, 9, 12, 15, 18 and the 5 ghost is at the finish point at steps 5, 10, 15, 20, ...
+   *
+   *  The first time these two ghosts are at the finish point at the same time is exactly at the least common multiple of 3 and 5, namely 15"
    *
    * I don't really get this solution but maybe if I draw it out it'll make more sense. I hate that the example inputs
    * AoC gives don't expose what the input is doing and you're just supposed to waste time deciphering the ghosts to figure it out.
