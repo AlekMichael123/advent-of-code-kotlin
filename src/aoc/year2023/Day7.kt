@@ -2,6 +2,10 @@ package aoc.year2023
 
 import aoc.Day
 
+/**
+ * TODO: CLEAN UP! You can refactor part 1 and part 2 to use the same method for calculating result...
+ */
+
 class Day7 : Day {
   enum class HandOrder(val value: Int) {
     FIVE_OF_A_KIND(7),
