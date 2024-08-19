@@ -58,23 +58,14 @@ class Day8 : Day {
   ): Int =
     if (currLocation[0] == 'Z')
       steps
-    else if (instructions[i] == 'L')
-      followInstructions(
-        instructions,
-        nodeMap,
-        currLocation = nodeMap[currLocation]!!.first,
-        i = (i + 1) % instructions.length,
-        steps = steps + 1,
-      )
     else
       followInstructions(
         instructions,
         nodeMap,
-        currLocation = nodeMap[currLocation]!!.second,
+        currLocation = if (instructions[i] == 'L') nodeMap[currLocation]!!.first else nodeMap[currLocation]!!.second,
         i = (i + 1) % instructions.length,
         steps = steps + 1,
       )
-
 
   private tailrec fun Long.gcd(a: Long): Long =
     if (a == 0L) this
