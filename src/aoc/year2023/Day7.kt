@@ -2,12 +2,8 @@ package aoc.year2023
 
 import aoc.Day
 
-/**
- * TODO: CLEAN UP! You can refactor part 1 and part 2 to use the same method for calculating result...
- */
-
 class Day7 : Day {
-  enum class HandOrder(val value: Int) {
+  enum class HandRanks(val value: Int) {
     FIVE_OF_A_KIND(7),
     FOUR_OF_A_KIND(6),
     FULL_HOUSE(5),
@@ -19,63 +15,34 @@ class Day7 : Day {
   }
 
   override fun part1(input: String) {
-    val data = parseInput(input)
-    val order = data.map { pair ->
-      handOrder(pair.first).value to pair
-    }.fold(mutableMapOf<Int, MutableList<Pair<String, Int>>>()) { map, pair ->
-      map.putIfAbsent(pair.first, mutableListOf())
-      map[pair.first]!!.add(pair.second)
-      map
-    }
-
-    val keys = order.keys
-    keys.forEach { key ->
-      order[key]!!.sortWith { (a, _), (b, _) ->
-        var cmp = 0
-        for (i in a.indices) {
-          val aCharOrder = charOrder(a[i])
-          val bCharOrder = charOrder(b[i])
-          if (aCharOrder > bCharOrder) {
-            cmp = -1
-            break
-          } else if (aCharOrder < bCharOrder) {
-            cmp = 1
-            break
-          }
-        }
-        cmp
-      }
-    }
-    val sorted = keys.sorted()
-    var i = 1
-    var result = 0
-
-    sorted.forEach { rank ->
-      val values = order[rank]!!
-      values.forEach { (_, bid) ->
-        result += bid * i++
-      }
-    }
+    val result = calculateTotalBidsViaRank(input, jokers = false)
     println(result)
   }
 
   override fun part2(input: String) {
+    val result = calculateTotalBidsViaRank(input, jokers = true)
+    println(result)
+  }
+
+  private fun calculateTotalBidsViaRank(input: String, jokers: Boolean): Int {
     val data = parseInput(input)
+    // store each hand/bid with the hand's respective rank
     val order = data.map { pair ->
-      handOrder(pair.first, jokers = true).value to pair
+      handRank(pair.first, jokers) to pair
     }.fold(mutableMapOf<Int, MutableList<Pair<String, Int>>>()) { map, pair ->
       map.putIfAbsent(pair.first, mutableListOf())
       map[pair.first]!!.add(pair.second)
       map
     }
 
+    // For each hand rank, sort the hands/bids by the card's rank
     val keys = order.keys
     keys.forEach { key ->
       order[key]!!.sortWith { (a, _), (b, _) ->
         var cmp = 0
         for (i in a.indices) {
-          val aCharOrder = charOrder(a[i], jokers = true)
-          val bCharOrder = charOrder(b[i], jokers = true)
+          val aCharOrder = cardRank(a[i], jokers)
+          val bCharOrder = cardRank(b[i], jokers)
           if (aCharOrder > bCharOrder) {
             cmp = -1
             break
@@ -87,17 +54,21 @@ class Day7 : Day {
         cmp
       }
     }
+
+    // I'm really too lazy to just make a list of 1 to 7 but whatever
     val sorted = keys.sorted()
     var i = 1
     var result = 0
 
+    // add each bid in order multiplied by its position
     sorted.forEach { rank ->
       val values = order[rank]!!
       values.forEach { (_, bid) ->
         result += bid * i++
       }
     }
-    println(result)
+
+    return result
   }
 
   private fun parseInput(input: String) =
@@ -106,7 +77,7 @@ class Day7 : Day {
       hand to bid.toInt()
     }
 
-  private fun handOrder(hand: String, jokers: Boolean = false) =
+  private fun handRank(hand: String, jokers: Boolean) =
     hand.toCharArray().let { handArr ->
       val fiveOfaKindCheck = fiveOfaKind(handArr)
       val fourOfaKindCheck = fourOfaKind(handArr, jokers)
@@ -123,11 +94,11 @@ class Day7 : Day {
       else if (pass(twoPairCheck)) twoPairCheck
       else if (pass(onePairCheck)) onePairCheck
       else highCardCheck
-    }
+    }.value
 
   private fun highCard(hand: CharArray, jokers: Boolean) =
-    if (jokers && hand.contains('J')) HandOrder.ONE_PAIR
-    else HandOrder.HIGH_CARD
+    if (jokers && hand.contains('J')) HandRanks.ONE_PAIR
+    else HandRanks.HIGH_CARD
 
   private fun onePair(hand: CharArray, jokers: Boolean = false) =
     if (
@@ -136,16 +107,16 @@ class Day7 : Day {
       hand.count { it == hand[2] } == 2 ||
       hand.count { it == hand[3] } == 2
     )
-      if (jokers && (hand.count { it == 'J' } == 2 || hand.count { it == 'J' } == 1)) HandOrder.THREE_OF_A_KIND
-      else HandOrder.ONE_PAIR
-    else HandOrder.BUST
+      if (jokers && (hand.count { it == 'J' } == 2 || hand.count { it == 'J' } == 1)) HandRanks.THREE_OF_A_KIND
+      else HandRanks.ONE_PAIR
+    else HandRanks.BUST
 
   private fun twoPair(hand: CharArray, jokers: Boolean) =
     if (hand.toSet().size == 3)
-      if (jokers && hand.count { it == 'J' } == 2) HandOrder.FOUR_OF_A_KIND
-      else if (jokers && hand.count { it == 'J' } == 1) HandOrder.FULL_HOUSE
-      else HandOrder.TWO_PAIR
-    else HandOrder.BUST
+      if (jokers && hand.count { it == 'J' } == 2) HandRanks.FOUR_OF_A_KIND
+      else if (jokers && hand.count { it == 'J' } == 1) HandRanks.FULL_HOUSE
+      else HandRanks.TWO_PAIR
+    else HandRanks.BUST
 
   private fun threeOfaKind(hand: CharArray, jokers: Boolean = false) =
     if (
@@ -153,33 +124,33 @@ class Day7 : Day {
       hand.count { it == hand[1] } == 3 ||
       hand.count { it == hand[2] } == 3
     )
-      if (jokers && (hand.count { it == 'J' } == 3 || hand.count { it == 'J' } == 1)) HandOrder.FOUR_OF_A_KIND
-      else HandOrder.THREE_OF_A_KIND
-    else HandOrder.BUST
+      if (jokers && (hand.count { it == 'J' } == 3 || hand.count { it == 'J' } == 1)) HandRanks.FOUR_OF_A_KIND
+      else HandRanks.THREE_OF_A_KIND
+    else HandRanks.BUST
 
   private fun fullHouse(hand: CharArray, jokers: Boolean) =
     if (pass(onePair(hand)) && pass(threeOfaKind(hand)))
-      if (jokers && (hand.count { it == 'J' } == 2 || hand.count { it == 'J' } == 3)) HandOrder.FIVE_OF_A_KIND
-      else HandOrder.FULL_HOUSE
-    else HandOrder.BUST
+      if (jokers && (hand.count { it == 'J' } == 2 || hand.count { it == 'J' } == 3)) HandRanks.FIVE_OF_A_KIND
+      else HandRanks.FULL_HOUSE
+    else HandRanks.BUST
 
   private fun fourOfaKind(hand: CharArray, jokers: Boolean) =
     if (
       hand.count { it == hand[0] } == 4 ||
       hand.count { it == hand[1] } == 4
     )
-      if (jokers && (hand.count { it == 'J' } == 1 || hand.count { it == 'J' } == 4)) HandOrder.FIVE_OF_A_KIND
-      else HandOrder.FOUR_OF_A_KIND
-    else HandOrder.BUST
+      if (jokers && (hand.count { it == 'J' } == 1 || hand.count { it == 'J' } == 4)) HandRanks.FIVE_OF_A_KIND
+      else HandRanks.FOUR_OF_A_KIND
+    else HandRanks.BUST
 
   // this does not rely on jokers existing
   private fun fiveOfaKind(hand: CharArray) =
-    if (hand.all { it == hand[0] }) HandOrder.FIVE_OF_A_KIND
-    else HandOrder.BUST
+    if (hand.all { it == hand[0] }) HandRanks.FIVE_OF_A_KIND
+    else HandRanks.BUST
 
-  private fun pass(result: HandOrder) = result != HandOrder.BUST
+  private fun pass(result: HandRanks) = result != HandRanks.BUST
 
-  private fun charOrder(char: Char, jokers: Boolean = false) =
+  private fun cardRank(char: Char, jokers: Boolean = false) =
     if (!jokers)
       "AKQJT98765432".indexOf(char)
     else
