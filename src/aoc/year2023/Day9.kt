@@ -14,13 +14,10 @@ class Day9 : Day {
   override fun part2(input: String) {
     val data = parseInput(input)
     val result = data.fold(0) { acc, d ->
-      val differences = calculateDifferences(d, beginning = true)
-      var extrapolated = differences.last()
-      var i = differences.size - 2
-      while (i >= 0) {
-        extrapolated = differences[i--] - extrapolated
+      acc + calculateDifferences(d, beginning = true).reversed().foldIndexed(0) { i, total, diff ->
+        if (i == 0) diff
+        else diff - total
       }
-      acc + extrapolated
     }
     println("Total is $result")
   }
