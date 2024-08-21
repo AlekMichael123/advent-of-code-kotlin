@@ -24,7 +24,7 @@ class Day9 : Day {
 
   private fun calculateDifferences(values: List<Int>, beginning: Boolean): List<Int> {
     val differences = mutableListOf(if (beginning) values.first() else values.last())
-    var currDifferences: List<Int> = values.mapIndexed { i, value ->
+    var currDifferences = values.mapIndexed { i, value ->
       if (i < values.size - 1) values[i + 1] - value
       else null
     }.filterNotNull()
