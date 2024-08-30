@@ -13,7 +13,8 @@ class Day10 : Day {
     Nothing('.'),
     CreatureStart('S'),
     Filler('0'),
-    ExpandedSpace('#');
+    ExpandedSpace('#'),
+    AnyPipe('X');
     companion object {
       fun from(findValue: Char) = entries.first { it.char == findValue }
     }
@@ -31,16 +32,15 @@ class Day10 : Day {
 
   override fun part2(input: String) {
     val data = parseInput(input)
-    val expandedData = expandGrid(data)
+    val removedNonLoopPipes = fillNonLoopPipes(data)
+    val expandedData = expandGrid(removedNonLoopPipes)
     val filledData = fillOutsideNothingSpaces(expandedData)
     val result = countNothingSpaces(filledData)
-    println(filledData.joinToString("\n") { it.map { it.char }.joinToString("") })
     println("Total enclosed empty spaces: $result")
   }
 
   private fun countNothingSpaces(data: List<MutableList<PipeChar>>) =
     data.fold(0) { acc, row -> acc + row.count { it == PipeChar.Nothing } }
-// TODO: EXPERIMENT WITH DIFFERENT SHAPES???? THIS PROBLEM SUX!!!
   private fun expandGrid(data: List<MutableList<PipeChar>>) =
     data.foldIndexed(mutableListOf<MutableList<PipeChar>>()) { i, acc, row ->
       val values = row.map {
@@ -59,33 +59,33 @@ class Day10 : Day {
             )
           PipeChar.NorthToEast ->
             listOf(
-              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.NorthToEast, PipeChar.EastToWest, PipeChar.EastToWest,
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.NorthToEast, PipeChar.EastToWest,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
             )
           PipeChar.NorthToWest ->
             listOf(
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
-              PipeChar.EastToWest, PipeChar.EastToWest, PipeChar.NorthToWest,
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
+              PipeChar.EastToWest, PipeChar.NorthToWest, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
             )
           PipeChar.SouthToWest ->
             listOf(
-              PipeChar.EastToWest, PipeChar.EastToWest, PipeChar.SouthToWest,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.EastToWest, PipeChar.SouthToWest, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
             )
           PipeChar.SouthToEast ->
             listOf(
-              PipeChar.SouthToEast, PipeChar.EastToWest, PipeChar.EastToWest,
-              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.SouthToEast, PipeChar.EastToWest,
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
             )
           PipeChar.CreatureStart ->
             listOf(
-              PipeChar.ExpandedSpace, PipeChar.CreatureStart, PipeChar.ExpandedSpace,
               PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
-              PipeChar.ExpandedSpace, PipeChar.CreatureStart, PipeChar.ExpandedSpace,
+              PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
+              PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
             )
           else ->
             listOf(
@@ -109,11 +109,7 @@ class Day10 : Day {
 
   private val directions = listOf(
     1 to 0,
-//    1 to -1,
-//    1 to 1,
     -1 to 0,
-//    -1 to -1,
-//    -1 to 1,
     0 to 1,
     0 to -1,
   )
@@ -125,20 +121,30 @@ class Day10 : Day {
     val lengthI = data.size
     val lengthJ = data[0].size
     var routes = generateRoutes(dataCopy, startI, startJ, lengthI, lengthJ)
-
+    val loopingPipes = mutableSetOf(startI to startJ).also { it.addAll(routes.map { r -> r.position }) }
     while (routes.isNotEmpty()) {
       routes = routes.map { route ->
         pipeInteraction(route, pipe = data[route.position.first][route.position.second])
       }.filter {
         val (i, j) = it.position
-        val endOfRoute = outOfBounds(i, j, lengthI, lengthJ) || data[i][j] == PipeChar.Nothing || data[i][j] == PipeChar.Filler
-        if (!endOfRoute)
-          dataCopy[i][j] = PipeChar.ExpandedSpace
-        !endOfRoute && data[i][j] != PipeChar.CreatureStart
+        val endOfRoute =
+          outOfBounds(i, j, lengthI, lengthJ) ||
+            data[i][j] == PipeChar.Nothing ||
+            data[i][j] == PipeChar.CreatureStart
+
+        loopingPipes.add(it.position)
+        !endOfRoute
       }
     }
 
-    return dataCopy
+    return dataCopy.mapIndexed { i, row ->
+      row.mapIndexed { j, cell ->
+        if (cell != PipeChar.Nothing && !loopingPipes.contains(i to j))
+          PipeChar.ExpandedSpace
+        else
+          cell
+      }.toMutableList()
+    }
   }
 
   private fun fillOutsideNothingSpaces(data: List<MutableList<PipeChar>>): List<MutableList<PipeChar>> {
