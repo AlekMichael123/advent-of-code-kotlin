@@ -13,131 +13,101 @@ class Day10 : Day {
     Nothing('.'),
     CreatureStart('S'),
     Filler('0'),
-    ExpandedSpace('#'),
-    AnyPipe('X');
+    ExpandedSpace('#');
+    fun expandPipe() = when (this) {
+      NorthToSouth ->
+        listOf(
+          ExpandedSpace, NorthToSouth, ExpandedSpace,
+          ExpandedSpace, NorthToSouth, ExpandedSpace,
+          ExpandedSpace, NorthToSouth, ExpandedSpace,
+        )
+      EastToWest ->
+        listOf(
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+          EastToWest,    EastToWest,    EastToWest,
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+        )
+      NorthToEast ->
+        listOf(
+          ExpandedSpace, NorthToSouth,  ExpandedSpace,
+          ExpandedSpace, NorthToEast,   EastToWest,
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+        )
+      NorthToWest ->
+        listOf(
+          ExpandedSpace, NorthToSouth,  ExpandedSpace,
+          EastToWest, NorthToWest,      ExpandedSpace,
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+        )
+      SouthToWest ->
+        listOf(
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+          EastToWest, SouthToWest,      ExpandedSpace,
+          ExpandedSpace, NorthToSouth,  ExpandedSpace,
+        )
+      SouthToEast ->
+        listOf(
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+          ExpandedSpace, SouthToEast,   EastToWest,
+          ExpandedSpace, NorthToSouth,  ExpandedSpace,
+        )
+      CreatureStart ->
+        listOf(
+          CreatureStart, CreatureStart, CreatureStart,
+          CreatureStart, CreatureStart, CreatureStart,
+          CreatureStart, CreatureStart, CreatureStart,
+        )
+      else ->
+        listOf(
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+          ExpandedSpace, Nothing,       ExpandedSpace,
+          ExpandedSpace, ExpandedSpace, ExpandedSpace,
+        )
+    }
     companion object {
       fun from(findValue: Char) = entries.first { it.char == findValue }
-    }
+     }
   }
 
   private data class Route(var position: Pair<Int, Int>, var prev: Pair<Int, Int>, var steps: Int = 0)
 
   override fun part1(input: String) {
     val data = parseInput(input)
-    val i = data.indexOfFirst { it.contains(PipeChar.CreatureStart) }
-    val j = data[i].indexOf(PipeChar.CreatureStart)
+    val (i, j) = findCreatureStart(data)
     val result = findFurthestPositionFromStart(i, j, data)
     println("Furthest distance is $result")
   }
 
   override fun part2(input: String) {
     val data = parseInput(input)
-    val removedNonLoopPipes = fillNonLoopPipes(data)
-    val expandedData = expandGrid(removedNonLoopPipes)
-    val filledData = fillOutsideNothingSpaces(expandedData)
-    val result = countNothingSpaces(filledData)
+    val result =
+      countNothingSpaces(
+        fillOutsideNothingSpaces(
+          expandGrid(
+            fillNonLoopPipes(
+              data))))
     println("Total enclosed empty spaces: $result")
   }
 
-  private fun countNothingSpaces(data: List<MutableList<PipeChar>>) =
-    data.fold(0) { acc, row -> acc + row.count { it == PipeChar.Nothing } }
-  private fun expandGrid(data: List<MutableList<PipeChar>>) =
-    data.foldIndexed(mutableListOf<MutableList<PipeChar>>()) { i, acc, row ->
-      val values = row.map {
-        when (it) {
-          PipeChar.NorthToSouth ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-            )
-          PipeChar.EastToWest ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.EastToWest, PipeChar.EastToWest, PipeChar.EastToWest,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-            )
-          PipeChar.NorthToEast ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.NorthToEast, PipeChar.EastToWest,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-            )
-          PipeChar.NorthToWest ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-              PipeChar.EastToWest, PipeChar.NorthToWest, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-            )
-          PipeChar.SouthToWest ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.EastToWest, PipeChar.SouthToWest, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-            )
-          PipeChar.SouthToEast ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.SouthToEast, PipeChar.EastToWest,
-              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
-            )
-          PipeChar.CreatureStart ->
-            listOf(
-              PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
-              PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
-              PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
-            )
-          else ->
-            listOf(
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.Nothing, PipeChar.ExpandedSpace,
-              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
-            )
-        }
-      }
-      acc.add(mutableListOf())
-      acc.add(mutableListOf())
-      acc.add(mutableListOf())
-      values.forEach { value ->
-        acc[acc.size - 3].addAll(value.subList(0, 3))
-        acc[acc.size - 2].addAll(value.subList(3, 6))
-        acc[acc.size - 1].addAll(value.subList(6, 9))
-      }
-
-      acc
-    }
-
-  private val directions = listOf(
-    1 to 0,
-    -1 to 0,
-    0 to 1,
-    0 to -1,
-  )
-
   private fun fillNonLoopPipes(data: List<MutableList<PipeChar>>): List<MutableList<PipeChar>> {
-    val dataCopy = data.map { it.toMutableList() }
-    val startI = data.indexOfFirst { it.contains(PipeChar.CreatureStart) }
-    val startJ = data[startI].indexOf(PipeChar.CreatureStart)
-    val lengthI = data.size
-    val lengthJ = data[0].size
-    var routes = generateRoutes(dataCopy, startI, startJ, lengthI, lengthJ)
+    val (startI, startJ) = findCreatureStart(data)
+    val (lengthI, lengthJ) = findGridLengths(data)
+    var routes = generateRoutes(data, startI, startJ, lengthI, lengthJ)
     val loopingPipes = mutableSetOf(startI to startJ).also { it.addAll(routes.map { r -> r.position }) }
     while (routes.isNotEmpty()) {
-      routes = routes.map { route ->
-        pipeInteraction(route, pipe = data[route.position.first][route.position.second])
-      }.filter {
+      routes = applyPipeLogic(routes, data).filter {
         val (i, j) = it.position
         val endOfRoute =
-          outOfBounds(i, j, lengthI, lengthJ) ||
-            data[i][j] == PipeChar.Nothing ||
-            data[i][j] == PipeChar.CreatureStart
+          outOfBounds(i, j, lengthI, lengthJ)
+            || data[i][j] == PipeChar.Nothing
+            || data[i][j] == PipeChar.CreatureStart
 
         loopingPipes.add(it.position)
         !endOfRoute
       }
     }
 
-    return dataCopy.mapIndexed { i, row ->
+    return data.mapIndexed { i, row ->
       row.mapIndexed { j, cell ->
         if (cell != PipeChar.Nothing && !loopingPipes.contains(i to j))
           PipeChar.ExpandedSpace
@@ -147,37 +117,52 @@ class Day10 : Day {
     }
   }
 
+  private fun expandGrid(data: List<MutableList<PipeChar>>) =
+    data.fold(mutableListOf<MutableList<PipeChar>>()) { acc, row ->
+      val values = row.map { it.expandPipe() }
+      acc.addAll(List(3) { mutableListOf() })
+
+      values.forEach { value ->
+        acc[acc.size - 3].addAll(value.subList(0, 3))
+        acc[acc.size - 2].addAll(value.subList(3, 6))
+        acc[acc.size - 1].addAll(value.subList(6, 9))
+      }
+
+      acc
+    }
+
   private fun fillOutsideNothingSpaces(data: List<MutableList<PipeChar>>): List<MutableList<PipeChar>> {
     val dataCopy = data.map { it.toMutableList() }
-    val lengthI = dataCopy.size
-    val lengthJ = dataCopy[0].size
+    val (lengthI, lengthJ) = findGridLengths(dataCopy)
+    val directions = listOf(
+      1 to 0,
+      -1 to 0,
+      0 to 1,
+      0 to -1,
+    )
 
-    fun dfs(startI: Int, startJ: Int) {
-      val candidates = mutableListOf(startI to startJ)
-      while (candidates.isNotEmpty()) {
-        val position = candidates.removeLast()
-        val (i, j) = position
+    val candidates = mutableListOf(0 to 0)
+    while (candidates.isNotEmpty()) {
+      val position = candidates.removeLast()
+      val (i, j) = position
 
-        if (outOfBounds(i, j, lengthI, lengthJ) || (dataCopy[i][j] != PipeChar.Nothing && dataCopy[i][j] != PipeChar.ExpandedSpace))
-          continue
-        dataCopy[i][j] = PipeChar.Filler
-        for ((iOff, jOff) in directions)
-          candidates.add((iOff + i) to (jOff + j))
-      }
+      if (outOfBounds(i, j, lengthI, lengthJ) || (dataCopy[i][j] != PipeChar.Nothing && dataCopy[i][j] != PipeChar.ExpandedSpace))
+        continue
+      dataCopy[i][j] = PipeChar.Filler
+      for ((iOff, jOff) in directions)
+        candidates.add((iOff + i) to (jOff + j))
     }
-
-    for (i in 0 ..< lengthI) {
-      dfs(i, startJ = 0)
-      dfs(i, startJ = lengthJ - 1)
-    }
-
-    for (j in 0 ..< lengthJ) {
-      dfs(startI = 0, j)
-      dfs(startI = lengthI - 1, j)
-    }
-//    dfs(0,0)
 
     return dataCopy
+  }
+
+  private fun countNothingSpaces(data: List<MutableList<PipeChar>>) =
+    data.fold(0) { acc, row -> acc + row.count { it == PipeChar.Nothing } }
+
+  private fun findCreatureStart(data: List<MutableList<PipeChar>>): Pair<Int, Int> {
+    val startI = data.indexOfFirst { it.contains(PipeChar.CreatureStart) }
+    val startJ = data[startI].indexOf(PipeChar.CreatureStart)
+    return Pair(startI, startJ)
   }
 
   private fun findFurthestPositionFromStart(
@@ -185,17 +170,12 @@ class Day10 : Day {
     startJ: Int,
     data: List<MutableList<PipeChar>>,
   ): Int {
-    val lengthI = data.size
-    val lengthJ = data[0].size
-
+    val (lengthI, lengthJ) = findGridLengths(data)
     var routes = generateRoutes(data, startI, startJ, lengthI, lengthJ)
-
     var furthestDistance = 0
 
     while (routes.isNotEmpty()) {
-      routes = routes.map { route ->
-        pipeInteraction(route, pipe = data[route.position.first][route.position.second])
-      }.filter {
+      routes = applyPipeLogic(routes, data).filter {
         val (i, j) = it.position
         val endOfRoute = outOfBounds(i, j, lengthI, lengthJ) || data[i][j] == PipeChar.Nothing
         if (!endOfRoute && data[i][j] == PipeChar.CreatureStart)
@@ -205,6 +185,19 @@ class Day10 : Day {
     }
 
     return furthestDistance + 1
+  }
+
+  private fun applyPipeLogic(
+    routes: List<Route>,
+    data: List<MutableList<PipeChar>>,
+  ) = routes.map { route ->
+    pipeInteraction(route, pipe = data[route.position.first][route.position.second])
+  }
+
+  private fun findGridLengths(data: List<MutableList<PipeChar>>): Pair<Int, Int> {
+    val lengthI = data.size
+    val lengthJ = data[0].size
+    return Pair(lengthI, lengthJ)
   }
 
   private fun generateRoutes(data: List<MutableList<PipeChar>>, startI: Int, startJ: Int, lengthI: Int, lengthJ: Int) =
@@ -232,8 +225,8 @@ class Day10 : Day {
 
     val north = i - 1 to j
     val south = i + 1 to j
-    val west = i to j - 1
-    val east = i to j + 1
+    val west  = i to j - 1
+    val east  = i to j + 1
 
     val nextPosition = when (pipe) {
       PipeChar.NorthToSouth -> if (north == prev) south else north
