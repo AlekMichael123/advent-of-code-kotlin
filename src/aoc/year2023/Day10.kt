@@ -162,7 +162,7 @@ class Day10 : Day {
   private fun findCreatureStart(data: List<MutableList<PipeChar>>): Pair<Int, Int> {
     val startI = data.indexOfFirst { it.contains(PipeChar.CreatureStart) }
     val startJ = data[startI].indexOf(PipeChar.CreatureStart)
-    return Pair(startI, startJ)
+    return startI to startJ
   }
 
   private fun findFurthestPositionFromStart(
@@ -197,7 +197,7 @@ class Day10 : Day {
   private fun findGridLengths(data: List<MutableList<PipeChar>>): Pair<Int, Int> {
     val lengthI = data.size
     val lengthJ = data[0].size
-    return Pair(lengthI, lengthJ)
+    return lengthI to lengthJ
   }
 
   private fun generateRoutes(data: List<MutableList<PipeChar>>, startI: Int, startJ: Int, lengthI: Int, lengthJ: Int) =
