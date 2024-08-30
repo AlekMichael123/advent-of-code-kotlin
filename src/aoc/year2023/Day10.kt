@@ -4,16 +4,18 @@ import aoc.Day
 
 class Day10 : Day {
   private enum class PipeChar(val char: Char) {
-    NorthToSouth('|'),
-    EastToWest('-'),
-    NorthToEast('L'),
-    NorthToWest('J'),
-    SouthToWest('7'),
-    SouthToEast('F'),
+    NorthToSouth('|'), // 0 self pair
+    EastToWest('-'), // 1 self pair
+    NorthToEast('L'),// 2
+    NorthToWest('J'), // 2
+    SouthToWest('7'),// 3
+    SouthToEast('F'), //3
     Nothing('.'),
-    CreatureStart('S');
+    CreatureStart('S'),
+    Filler('0'),
+    ExpandedSpace('#');
     companion object {
-      fun from(findValue: Char): PipeChar = entries.first { it.char == findValue }
+      fun from(findValue: Char) = entries.first { it.char == findValue }
     }
   }
 
@@ -28,16 +30,179 @@ class Day10 : Day {
   }
 
   override fun part2(input: String) {
+    val data = parseInput(input)
+    val expandedData = expandGrid(data)
+    val filledData = fillOutsideNothingSpaces(expandedData)
+    val result = countNothingSpaces(filledData)
+    println(filledData.joinToString("\n") { it.map { it.char }.joinToString("") })
+    println("Total enclosed empty spaces: $result")
+  }
+
+  private fun countNothingSpaces(data: List<MutableList<PipeChar>>) =
+    data.fold(0) { acc, row -> acc + row.count { it == PipeChar.Nothing } }
+// TODO: EXPERIMENT WITH DIFFERENT SHAPES???? THIS PROBLEM SUX!!!
+  private fun expandGrid(data: List<MutableList<PipeChar>>) =
+    data.foldIndexed(mutableListOf<MutableList<PipeChar>>()) { i, acc, row ->
+      val values = row.map {
+        when (it) {
+          PipeChar.NorthToSouth ->
+            listOf(
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.NorthToSouth, PipeChar.ExpandedSpace,
+            )
+          PipeChar.EastToWest ->
+            listOf(
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.EastToWest, PipeChar.EastToWest, PipeChar.EastToWest,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+            )
+          PipeChar.NorthToEast ->
+            listOf(
+              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.NorthToEast, PipeChar.EastToWest, PipeChar.EastToWest,
+            )
+          PipeChar.NorthToWest ->
+            listOf(
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
+              PipeChar.EastToWest, PipeChar.EastToWest, PipeChar.NorthToWest,
+            )
+          PipeChar.SouthToWest ->
+            listOf(
+              PipeChar.EastToWest, PipeChar.EastToWest, PipeChar.SouthToWest,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.NorthToSouth,
+            )
+          PipeChar.SouthToEast ->
+            listOf(
+              PipeChar.SouthToEast, PipeChar.EastToWest, PipeChar.EastToWest,
+              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.NorthToSouth, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+            )
+          PipeChar.CreatureStart ->
+            listOf(
+              PipeChar.ExpandedSpace, PipeChar.CreatureStart, PipeChar.ExpandedSpace,
+              PipeChar.CreatureStart, PipeChar.CreatureStart, PipeChar.CreatureStart,
+              PipeChar.ExpandedSpace, PipeChar.CreatureStart, PipeChar.ExpandedSpace,
+            )
+          else ->
+            listOf(
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.Nothing, PipeChar.ExpandedSpace,
+              PipeChar.ExpandedSpace, PipeChar.ExpandedSpace, PipeChar.ExpandedSpace,
+            )
+        }
+      }
+      acc.add(mutableListOf())
+      acc.add(mutableListOf())
+      acc.add(mutableListOf())
+      values.forEach { value ->
+        acc[acc.size - 3].addAll(value.subList(0, 3))
+        acc[acc.size - 2].addAll(value.subList(3, 6))
+        acc[acc.size - 1].addAll(value.subList(6, 9))
+      }
+
+      acc
+    }
+
+  private val directions = listOf(
+    1 to 0,
+//    1 to -1,
+//    1 to 1,
+    -1 to 0,
+//    -1 to -1,
+//    -1 to 1,
+    0 to 1,
+    0 to -1,
+  )
+
+  private fun fillNonLoopPipes(data: List<MutableList<PipeChar>>): List<MutableList<PipeChar>> {
+    val dataCopy = data.map { it.toMutableList() }
+    val startI = data.indexOfFirst { it.contains(PipeChar.CreatureStart) }
+    val startJ = data[startI].indexOf(PipeChar.CreatureStart)
+    val lengthI = data.size
+    val lengthJ = data[0].size
+    var routes = generateRoutes(dataCopy, startI, startJ, lengthI, lengthJ)
+
+    while (routes.isNotEmpty()) {
+      routes = routes.map { route ->
+        pipeInteraction(route, pipe = data[route.position.first][route.position.second])
+      }.filter {
+        val (i, j) = it.position
+        val endOfRoute = outOfBounds(i, j, lengthI, lengthJ) || data[i][j] == PipeChar.Nothing || data[i][j] == PipeChar.Filler
+        if (!endOfRoute)
+          dataCopy[i][j] = PipeChar.ExpandedSpace
+        !endOfRoute && data[i][j] != PipeChar.CreatureStart
+      }
+    }
+
+    return dataCopy
+  }
+
+  private fun fillOutsideNothingSpaces(data: List<MutableList<PipeChar>>): List<MutableList<PipeChar>> {
+    val dataCopy = data.map { it.toMutableList() }
+    val lengthI = dataCopy.size
+    val lengthJ = dataCopy[0].size
+
+    fun dfs(startI: Int, startJ: Int) {
+      val candidates = mutableListOf(startI to startJ)
+      while (candidates.isNotEmpty()) {
+        val position = candidates.removeLast()
+        val (i, j) = position
+
+        if (outOfBounds(i, j, lengthI, lengthJ) || (dataCopy[i][j] != PipeChar.Nothing && dataCopy[i][j] != PipeChar.ExpandedSpace))
+          continue
+        dataCopy[i][j] = PipeChar.Filler
+        for ((iOff, jOff) in directions)
+          candidates.add((iOff + i) to (jOff + j))
+      }
+    }
+
+    for (i in 0 ..< lengthI) {
+      dfs(i, startJ = 0)
+      dfs(i, startJ = lengthJ - 1)
+    }
+
+    for (j in 0 ..< lengthJ) {
+      dfs(startI = 0, j)
+      dfs(startI = lengthI - 1, j)
+    }
+//    dfs(0,0)
+
+    return dataCopy
   }
 
   private fun findFurthestPositionFromStart(
     startI: Int,
     startJ: Int,
     data: List<MutableList<PipeChar>>,
-    lengthI: Int = data.size,
-    lengthJ: Int = data[0].size,
   ): Int {
-    var routes = listOf(
+    val lengthI = data.size
+    val lengthJ = data[0].size
+
+    var routes = generateRoutes(data, startI, startJ, lengthI, lengthJ)
+
+    var furthestDistance = 0
+
+    while (routes.isNotEmpty()) {
+      routes = routes.map { route ->
+        pipeInteraction(route, pipe = data[route.position.first][route.position.second])
+      }.filter {
+        val (i, j) = it.position
+        val endOfRoute = outOfBounds(i, j, lengthI, lengthJ) || data[i][j] == PipeChar.Nothing
+        if (!endOfRoute && data[i][j] == PipeChar.CreatureStart)
+          furthestDistance = furthestDistance.coerceAtLeast(it.steps / 2)
+        !endOfRoute && data[i][j] != PipeChar.CreatureStart
+      }
+    }
+
+    return furthestDistance + 1
+  }
+
+  private fun generateRoutes(data: List<MutableList<PipeChar>>, startI: Int, startJ: Int, lengthI: Int, lengthJ: Int) =
+    listOf(
       startI - 1 to startJ,
       startI + 1 to startJ,
       startI to startJ - 1,
@@ -51,23 +216,6 @@ class Day10 : Day {
         prev = startI to startJ,
       )
     }
-    var furthestDistance = 0
-
-    while (routes.isNotEmpty()) {
-      routes = routes.map { route ->
-        val nextRoute = pipeInteraction(route, pipe = data[route.position.first][route.position.second])
-        nextRoute
-      }.filter {
-        val (i, j) = it.position
-        val endOfRoute = outOfBounds(i, j, lengthI, lengthJ) || data[i][j] == PipeChar.Nothing
-        if (!endOfRoute && data[i][j] == PipeChar.CreatureStart)
-          furthestDistance = furthestDistance.coerceAtLeast(it.steps / 2)
-        !endOfRoute && data[i][j] != PipeChar.CreatureStart
-      }
-    }
-
-    return furthestDistance + 1
-  }
 
   private fun pipeInteraction(
     route: Route,
@@ -83,22 +231,20 @@ class Day10 : Day {
 
     val nextPosition = when (pipe) {
       PipeChar.NorthToSouth -> if (north == prev) south else north
-      PipeChar.EastToWest -> if (east == prev) west else east
-      PipeChar.NorthToEast -> if (north == prev) east else north
-      PipeChar.NorthToWest -> if (north == prev) west else north
-      PipeChar.SouthToWest -> if (south == prev) west else south
-      PipeChar.SouthToEast -> if (south == prev) east else south
+      PipeChar.EastToWest   -> if (east == prev)  west  else east
+      PipeChar.NorthToEast  -> if (north == prev) east  else north
+      PipeChar.NorthToWest  -> if (north == prev) west  else north
+      PipeChar.SouthToWest  -> if (south == prev) west  else south
+      PipeChar.SouthToEast  -> if (south == prev) east  else south
       else -> -1 to -1
     }
-
 
     return Route(
       position = nextPosition,
       prev = route.position,
-      steps = route.steps + 1
+      steps = route.steps + 1,
     )
   }
-
 
   private fun outOfBounds(i: Int, j: Int, lengthI: Int, lengthJ: Int) =
     i < 0 || i >= lengthI || j < 0 || j >= lengthJ
