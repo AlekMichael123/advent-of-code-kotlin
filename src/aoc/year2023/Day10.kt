@@ -36,13 +36,13 @@ class Day10 : Day {
       NorthToWest ->
         listOf(
           ExpandedSpace, NorthToSouth,  ExpandedSpace,
-          EastToWest, NorthToWest,      ExpandedSpace,
+          EastToWest,    NorthToWest,   ExpandedSpace,
           ExpandedSpace, ExpandedSpace, ExpandedSpace,
         )
       SouthToWest ->
         listOf(
           ExpandedSpace, ExpandedSpace, ExpandedSpace,
-          EastToWest, SouthToWest,      ExpandedSpace,
+          EastToWest,    SouthToWest,   ExpandedSpace,
           ExpandedSpace, NorthToSouth,  ExpandedSpace,
         )
       SouthToEast ->
@@ -149,8 +149,7 @@ class Day10 : Day {
       if (outOfBounds(i, j, lengthI, lengthJ) || (dataCopy[i][j] != PipeChar.Nothing && dataCopy[i][j] != PipeChar.ExpandedSpace))
         continue
       dataCopy[i][j] = PipeChar.Filler
-      for ((iOff, jOff) in directions)
-        candidates.add((iOff + i) to (jOff + j))
+      directions.forEach { (iOff, jOff) -> candidates.add(iOff + i to jOff + j) }
     }
 
     return dataCopy
@@ -201,20 +200,16 @@ class Day10 : Day {
   }
 
   private fun generateRoutes(data: List<MutableList<PipeChar>>, startI: Int, startJ: Int, lengthI: Int, lengthJ: Int) =
-    listOf(
-      startI - 1 to startJ,
-      startI + 1 to startJ,
-      startI to startJ - 1,
-      startI to startJ + 1,
-    ).filter {
-      val (i, j) = it
-      !outOfBounds(i, j, lengthI, lengthJ) && data[i][j] != PipeChar.Nothing
-    }.map {
-      Route(
-        position = it,
-        prev = startI to startJ,
-      )
-    }
+    calcDirections(startI, startJ)
+      .filter {
+        val (i, j) = it
+        !outOfBounds(i, j, lengthI, lengthJ) && data[i][j] != PipeChar.Nothing
+      }.map {
+        Route(
+          position = it,
+          prev = startI to startJ,
+        )
+      }
 
   private fun pipeInteraction(
     route: Route,
@@ -223,10 +218,7 @@ class Day10 : Day {
     val (i, j) = route.position
     val prev = route.prev
 
-    val north = i - 1 to j
-    val south = i + 1 to j
-    val west  = i to j - 1
-    val east  = i to j + 1
+    val (north, south, west, east) = calcDirections(i, j)
 
     val nextPosition = when (pipe) {
       PipeChar.NorthToSouth -> if (north == prev) south else north
@@ -244,6 +236,14 @@ class Day10 : Day {
       steps = route.steps + 1,
     )
   }
+
+  private fun calcDirections(i: Int, j: Int) =
+    listOf(
+      i - 1 to j,
+      i + 1 to j,
+      i to j - 1,
+      i to j + 1,
+    )
 
   private fun outOfBounds(i: Int, j: Int, lengthI: Int, lengthJ: Int) =
     i < 0 || i >= lengthI || j < 0 || j >= lengthJ
