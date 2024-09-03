@@ -1,8 +1,7 @@
 package aoc.year2023
+
 import aoc.Day
 import kotlin.math.abs
-
-typealias ExpandedUniverseInformation = Pair<List<Boolean>, List<Boolean>>
 
 class Day11 : Day {
   override fun part1(input: String) {
@@ -15,44 +14,43 @@ class Day11 : Day {
     println("Sum of all shortest paths is $result")
   }
 
+  /**
+   * LET IS AWESOME!!! Makes cool "one-liners" like this possible!
+   */
   private fun getShortestPathsBetweenGalaxies(data: List<String>, expansionScale: Int) =
-    findGalaxies(data).let { galaxyPositions ->
-      expandUniverse(data).let { (emptyRowIndices, emptyColIndices) ->
-        galaxyPositions.mapIndexed { i, (srcI, srcJ) ->
-          galaxyPositions.mapIndexed { j, (targetI, targetJ) ->
-            if (i >= j) 0
+    findGalaxies(data).let { galaxyPositions -> // find all galaxy positions
+      expandUniverse(data).let { (emptyRows, emptyCols) -> // find out what rows/cols are empty
+        galaxyPositions.mapIndexed { i, (iSource, jSource) -> // start at each galaxy "source"
+          galaxyPositions.mapIndexed { j, (iTarget, jTarget) -> // find the shortest path from source to galaxy "target"
+            if (i >= j) 0 // if we already found this path or traversing from source to itself
             else {
-              val rows = if (srcI > targetI) srcI downTo targetI else srcI..targetI
-              val cols = if (srcJ > targetJ) srcJ downTo targetJ else srcJ..targetJ
-              var emptyAmt = 0
+              // find indices that are going to be traversed.
+              // being able to use count below is pretty sweet looking imo
+              val rows = if (iSource > iTarget) iSource downTo iTarget else iSource..iTarget
+              val cols = if (jSource > jTarget) jSource downTo jTarget else jSource..jTarget
+              // count empty rows/cols
+              val emptyAmt = rows.count { emptyRows[it] } + cols.count { emptyCols[it] }
 
-              for (row in rows) if (emptyRowIndices[row]) emptyAmt++
-              for (col in cols) if (emptyColIndices[col]) emptyAmt++
-
-              abs(srcI - targetI) + abs(srcJ - targetJ) + (emptyAmt * expansionScale.dec())
+              // distance between source and target + the number of empty rows you would've had to walk through
+              abs(iSource - iTarget) + abs(jSource - jTarget) + (emptyAmt * expansionScale.dec())
             }
           }
         }
-      }.flatten().fold(0L) { acc, sum -> acc + sum }
+      }.flatten().fold(0L) { acc, sum -> acc + sum } // add up the path lengths
     }
 
+  // finds galaxy positions
   private fun findGalaxies(data: List<String>) =
     data.mapIndexed { i, row ->
       row.mapIndexedNotNull { j, char -> (i to j).takeIf { char == '#' } }
     }.flatten()
 
-  private fun expandUniverse(data: List<String>): ExpandedUniverseInformation {
-    val emptyRowIndices = data.map { row -> isAllEmptyRow(row) }
-    val emptyColIndices = data.first().indices.map { j -> isAllEmptyCol(data, j) }
+  private fun expandUniverse(data: List<String>): Pair<List<Boolean>, List<Boolean>> {
+    val emptyRowIndices = data.map { row -> row.all { it == '.' } } // find indices of empty rows
+    val emptyColIndices = data.first().indices.map { j -> data.all { it[j] == '.' } } // find indices of empty cols
 
     return emptyRowIndices to emptyColIndices
   }
-
-  private fun isAllEmptyRow(row: String) =
-    row.all { it == '.' }
-
-  private fun isAllEmptyCol(data: List<String>, j: Int) =
-    data.all { it[j] == '.' }
 
   private fun parseInput(input: String) =
     input.lines()
