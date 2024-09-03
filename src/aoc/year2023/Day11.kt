@@ -45,6 +45,14 @@ class Day11 : Day {
       row.mapIndexedNotNull { j, char -> (i to j).takeIf { char == '#' } }
     }.flatten()
 
+  /**
+   * Looking up other solutions, I could actually do something like this to have a list of indices to look through,
+   * put them in a set that would be pretty slick too
+   * i.e.
+   * val emptyRowIndices = data.indices.filer { row -> row.all { it == '.' } }
+   *
+   * I'll never leave my List<Boolean> tho, and F ARRAY! ammirite lol (don't talk to me about Arrays)
+   */
   private fun expandUniverse(data: List<String>): Pair<List<Boolean>, List<Boolean>> {
     val emptyRowIndices = data.map { row -> row.all { it == '.' } } // find indices of empty rows
     val emptyColIndices = data.first().indices.map { j -> data.all { it[j] == '.' } } // find indices of empty cols
