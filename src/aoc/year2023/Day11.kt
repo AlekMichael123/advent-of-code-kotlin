@@ -5,19 +5,19 @@ import kotlin.math.abs
 
 class Day11 : Day {
   override fun part1(input: String) {
-    val result = getShortestPathsBetweenGalaxies(data = parseInput(input), expansionScale = 2)
+    val result = addShortestPathLengthsBetweenGalaxies(data = parseInput(input), expansionScale = 2)
     println("Sum of all shortest paths is $result")
   }
 
   override fun part2(input: String) {
-    val result = getShortestPathsBetweenGalaxies(data = parseInput(input), expansionScale = 1_000_000)
+    val result = addShortestPathLengthsBetweenGalaxies(data = parseInput(input), expansionScale = 1_000_000)
     println("Sum of all shortest paths is $result")
   }
 
   /**
    * LET IS AWESOME!!! Makes cool "one-liners" like this possible!
    */
-  private fun getShortestPathsBetweenGalaxies(data: List<String>, expansionScale: Int) =
+  private fun addShortestPathLengthsBetweenGalaxies(data: List<String>, expansionScale: Int) =
     findGalaxies(data).let { galaxyPositions -> // find all galaxy positions
       expandUniverse(data).let { (emptyRows, emptyCols) -> // find out what rows/cols are empty
         galaxyPositions.mapIndexed { i, (iSource, jSource) -> // start at each galaxy "source"
