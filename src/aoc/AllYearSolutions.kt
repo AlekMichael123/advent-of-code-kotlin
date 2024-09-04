@@ -1,6 +1,6 @@
 package aoc
 
-import aoc.year2023.Year2023Solutions
+import aoc.year2023.*
 
 private val yearSolutions =
   mapOf(
