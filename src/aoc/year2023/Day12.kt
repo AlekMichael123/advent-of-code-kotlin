@@ -3,42 +3,49 @@ package aoc.year2023
 import aoc.Day
 
 class Day12 : Day {
+  private val memo = mutableMapOf<String, Long>()
+
   override fun part1(input: String) {
     val data = parseInput(input)
-    val result = data.fold(0) { acc, (record, sizes) ->
-      acc + countArrangements(record, sizes)
+    val result = data.fold(0L) { acc, (record, sizes) ->
+      val total = countArrangements(record, sizes)
+      acc + total
     }
     println("Total number of viable arrangements: $result")
   }
 
   override fun part2(input: String) {
     val data = unfold(parseInput(input))
-    val result = data.fold(0) { acc, (record, sizes) ->
+    val result = data.fold(0L) { acc, (record, sizes) ->
       acc + countArrangements(record, sizes)
     }
     println("Total number of viable arrangements after unfolding: $result")
   }
 
-  private fun countArrangements(record: String, sizes: List<Int>, i: Int = 0): Int {
-    if (i >= record.length) {
-      var currLength = 0
-      val filledInLocationsLengths = ("$record.").fold(mutableListOf<Int>()) { acc, c ->
-        if (c != '#' && currLength > 0) {
-          acc.add(currLength)
-          currLength = 0
-        }
-        else if (c == '#') currLength++
-        else currLength = 0
-        acc
+  private fun countArrangements(record: String, sizes: List<Int>): Long {
+    if (record.isEmpty()) return if (sizes.isEmpty()) 1 else 0
+    return memo.getOrPut("$record $sizes") {
+      when (record.first()) {
+        '.' -> countArrangements(record.trimStart { it == '.' }, sizes)
+        '?' -> countArrangements(record.substring(1), sizes) + // skip
+               countArrangements("#${record.substring(1)}", sizes) // fill
+        '#' ->
+          if (sizes.isEmpty()) 0
+          else {
+            val size = sizes.first()
+            val remainingSizes = sizes.drop(1)
+            if (size <= record.length && record.take(size).none { it == '.' })
+              when {
+                size == record.length -> if (remainingSizes.isEmpty()) 1 else 0
+                record[size] == '#' -> 0
+                else -> countArrangements(record.drop(size + 1), remainingSizes)
+              }
+            else 0
+          }
+
+        else -> throw IllegalStateException("Invalid input: $record")
       }
-      return if (filledInLocationsLengths == sizes) 1 else 0
     }
-    if (record[i] != '?') return countArrangements(record, sizes, i + 1)
-
-    val fill = countArrangements(record.replaceRange(range = i..i, replacement = "#"), sizes, i + 1)
-    val notFilled = countArrangements(record.replaceRange(range = i..i, replacement = "."), sizes, i + 1)
-
-    return fill + notFilled
   }
 
   private fun unfold(data: List<Pair<String, List<Int>>>) =
