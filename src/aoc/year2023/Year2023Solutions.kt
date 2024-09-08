@@ -14,5 +14,6 @@ class Year2023Solutions : YearSolutions() {
       10 to Day10(),
       11 to Day11(),
       12 to Day12(),
+      13 to Day13(),
     )
 }
