@@ -12,11 +12,33 @@ class Day13 : Day {
   }
 
   override fun part2(input: String) {
+    val data = parseInput(input)
+    val reflectionRows = data.map { findReflectiveRowIndex(it) }
+    val reflectionColumns = data.map { findReflectiveColumnIndex(it) }
+    var result = 0
+
+    data.forEachIndexed forEachIndexed@{ i, mirror ->
+      mirror.indices.forEach { y ->
+        mirror[y].indices.forEach { x ->
+          val copy = mirror.map { StringBuilder(it) }
+          copy[y][x] = if (copy[y][x] == '.') '#' else '.'
+
+          val rowReflection = findReflectiveRowIndex(copy.map { it.toString() }, originalAnswer = reflectionRows[i]-1)
+          val columnReflection = findReflectiveColumnIndex(copy.map { it.toString() }, originalAnswer = reflectionColumns[i]-1)
+
+          if (rowReflection != 0 || columnReflection != 0) {
+            result += (100 * rowReflection) + columnReflection
+            return@forEachIndexed
+          }
+        }
+      }
+    }
+    println("Result is $result")
   }
 
-  private fun findReflectiveRowIndex(data: List<String>) =
+  private fun findReflectiveRowIndex(data: List<String>, originalAnswer: Int = -1) =
     data.indices.indexOfFirst { i ->
-      if (i == data.lastIndex) return@indexOfFirst false
+      if (i == data.lastIndex || i == originalAnswer) return@indexOfFirst false
       var first = i
       var last = i+1
       while (first >= 0 && last <= data.lastIndex) {
@@ -29,9 +51,9 @@ class Day13 : Day {
       true
     } + 1
 
-  private fun findReflectiveColumnIndex(data: List<String>) =
+  private fun findReflectiveColumnIndex(data: List<String>, originalAnswer: Int = -1) =
     data.first().indices.indexOfFirst { j ->
-      if (j == data.first().lastIndex) return@indexOfFirst false
+      if (j == data.first().lastIndex || j == originalAnswer) return@indexOfFirst false
       var first = j
       var last = j + 1
       while (first >= 0 && last <= data.first().lastIndex) {
