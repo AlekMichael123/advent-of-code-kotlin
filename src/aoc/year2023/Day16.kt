@@ -14,7 +14,6 @@ class Day16 : Day {
 
   override fun part1(input: String) {
     val mirrors = parseInput(input)
-    val visited = traceLight(mirrors)
     val result = traceLight(mirrors).fold(0) { acc, visited -> acc + visited.count { it } }
     println("Result is $result")
   }
